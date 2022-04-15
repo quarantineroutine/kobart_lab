@@ -5,8 +5,8 @@ import torch
 from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
 from pytorch_lightning import Trainer, seed_everything
 
-from pytorch_lightning.callbacks import LearningRateMonitor, EarlyStopping, ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
 from data import DialogueSummarizationDataset
@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description="Fine-tuning Korean Dialogue Summar
 parser.add_argument("--accumulate-grad-batches", type=int, default=1, help="the number of gradident accumulation steps")
 parser.add_argument("--batch-size", type=int, default=16, help="training batch size")
 parser.add_argument("--dialogue-max-seq-len", type=int, default=256, help="dialogue max sequence length")
-parser.add_argument("--epochs", type=int, default=5, help="the numnber of training epochs")
+parser.add_argument("--epochs", type=int, default=5, help="the number of training epochs")
 parser.add_argument("--evaluate-interval", type=int, default=500, help="validation interval")
 parser.add_argument("--gpus", type=int, default=2, help="the number of gpus")
 parser.add_argument("--logging-interval", type=int, default=100, help="logging interval")
@@ -33,16 +33,15 @@ parser.add_argument("--summary-max-seq-len", type=int, default=64, help="summary
 parser.add_argument("--train-dataset-pattern", type=str, required=True, help="glob pattern of train dataset files")
 parser.add_argument("--val-batch-size", type=int, default=32, help="validation batch size")
 parser.add_argument("--val-dataset-pattern", type=str, required=True, help="glob pattern of valid dataset files")
-parser.add_argument("--wandb-project", type=str, default="kobart_lab", help="wanDB project name")
-parser.add_argument("--wandb-run-name", type=str, help="wanDB run name")
+parser.add_argument("--log-run-name", type=str, help="Tensorboard log experiment name")
 parser.add_argument("--warmup-rate", type=float, default=0.05, help="warmup step rate")
 
 
 def main(args: argparse.Namespace) -> None:
     seed_everything(args.seed)
 
-    tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v2', sep_token='<unused0>', cls_token='<unused1>')
-    model = BartForConditionalGeneration.from_pretrained('gogamza/kobart-base-v2')
+    tokenizer = PreTrainedTokenizerFast.from_pretrained('hyunwoongko/kobart', sep_token='<unused0>', cls_token='<unused1>')
+    model = BartForConditionalGeneration.from_pretrained('hyunwoongko/kobart')
 
     train_dataset = DialogueSummarizationDataset(
         paths=glob(args.train_dataset_pattern),
@@ -72,7 +71,7 @@ def main(args: argparse.Namespace) -> None:
             args.max_learning_rate,
             args.min_learning_rate,
             args.warmup_rate,
-            args.output_dir + '/models',
+            args.output_dir + '/models/' + args.log_run_name,
             args.rdrop_alpha,
         )
     elif args.method == "r3f":
@@ -82,29 +81,32 @@ def main(args: argparse.Namespace) -> None:
             args.max_learning_rate,
             args.min_learning_rate,
             args.warmup_rate,
-            args.output_dir + '/models',
+            args.output_dir + '/models/' + args.log_run_name,
             args.r3f_lambda,
         )
     else:
         lightning_module = DefaultModule(
-            model, total_steps, args.max_learning_rate, args.min_learning_rate, args.warmup_rate, args.output_dir + '/models'
+            model,
+            total_steps,
+            args.max_learning_rate,
+            args.min_learning_rate,
+            args.warmup_rate,
+            args.output_dir + '/models/' + args.log_run_name,
         )
 
     train_loggers = [
-        WandbLogger(
-            name=args.wandb_run_name,
-            project=args.wandb_project,
-            save_dir=args.output_dir + '/logs',
+        TensorBoardLogger(
+            args.output_dir + '/logs',
+            name=args.log_run_name,
         )
     ]
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=args.output_dir + '/model_ckpts',
+        dirpath=args.output_dir + '/model_ckpts/' + args.log_run_name,
         monitor='val_loss',
-        filename='epoch{epoch:02d}-val_loss{val_loss:.2f}',
-        every_n_train_steps=args.evaluate_interval,
+        filename=args.log_run_name + '{epoch:02d}-{val_loss:.2f}',
         auto_insert_metric_name=True,
-        save_top_k=10,
+        save_top_k=5,
         mode='min',
     )
 
@@ -114,7 +116,7 @@ def main(args: argparse.Namespace) -> None:
         log_every_n_steps=args.logging_interval,
         val_check_interval=args.evaluate_interval,
         accumulate_grad_batches=args.accumulate_grad_batches,
-        callbacks=[LearningRateMonitor(logging_interval="step"), EarlyStopping(monitor="val_loss"), checkpoint_callback],
+        callbacks=[LearningRateMonitor(logging_interval="step"), checkpoint_callback],
         gpus=args.gpus,
         strategy='ddp',
     )

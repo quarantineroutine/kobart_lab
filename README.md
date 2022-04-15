@@ -8,7 +8,7 @@
 python train.py --output-dir './outputs' \
     --train-dataset-pattern './data/train/*.json' \
     --val-dataset-pattern './data/valid/*.json' \
-    --wandb-run-name 'default-01'
+    --log-run-name 'default01'
 ```
 
 ## To-dos
