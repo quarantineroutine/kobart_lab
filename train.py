@@ -5,7 +5,7 @@ import torch
 from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
 from pytorch_lightning import Trainer, seed_everything
 
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
@@ -116,7 +116,11 @@ def main(args: argparse.Namespace) -> None:
         log_every_n_steps=args.logging_interval,
         val_check_interval=args.evaluate_interval,
         accumulate_grad_batches=args.accumulate_grad_batches,
-        callbacks=[LearningRateMonitor(logging_interval="step"), checkpoint_callback],
+        callbacks=[
+            LearningRateMonitor(logging_interval="step"),
+            EarlyStopping(monitor="val_loss", patience=5, mode="min"),
+            checkpoint_callback
+        ],
         gpus=args.gpus,
         strategy='ddp',
     )
