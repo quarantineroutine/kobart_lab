@@ -45,8 +45,10 @@ def main(args: argparse.Namespace) -> None:
     os.environ["TOKENIZERS_PARALLELISM"] = "true"
     seed_everything(args.seed, workers=True)
 
-    tokenizer = PreTrainedTokenizerFast.from_pretrained('hyunwoongko/kobart', sep_token='<unused0>', cls_token='<unused1>')
-    teacher = BartForConditionalGeneration.from_pretrained('hyunwoongko/kobart')
+    tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v2', bos_token='<s>', sep_token='<sep>', cls_token='<cls>')
+    teacher = BartForConditionalGeneration.from_pretrained('gogamza/kobart-base-v2')
+    teacher.resize_token_embeddings(len(tokenizer))
+
     student = DistilKoBart(teacher, e=args.num_encoder_layer, d=args.num_decoder_layer)
     print(f'use DistilKoBart-{args.num_encoder_layer}-{args.num_decoder_layer}')
 
