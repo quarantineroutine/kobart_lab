@@ -1,6 +1,6 @@
 import os
 import warnings
-from typing import List, Union, Optional, Callable
+from typing import List
 
 import torch
 from torch import nn

@@ -17,6 +17,7 @@ from lightning_modules import DefaultModule, RDropModule, R3FModule
 
 parser = argparse.ArgumentParser(description="Fine-tuning Korean Dialogue Summarization with KoBART")
 
+parser.add_argument("--accelerator-type", type=str, choices=["cpu", "gpu", "tpu"], default="gpu", help="accelerator type")
 parser.add_argument("--accumulate-grad-batches", type=int, default=2, help="the number of gradident accumulation steps")
 parser.add_argument("--batch-size", type=int, default=16, help="training batch size")
 parser.add_argument("--dialogue-max-seq-len", type=int, default=256, help="dialogue max sequence length")
@@ -111,7 +112,7 @@ def main(args: argparse.Namespace) -> None:
         )
     ]
 
-    if args.gpus == 0:
+    if args.accelerator_type == "cpu":
         trainer = Trainer(
             logger=train_loggers,
             max_epochs=args.epochs,
@@ -123,6 +124,20 @@ def main(args: argparse.Namespace) -> None:
                 EarlyStopping(monitor="val_loss", patience=3, mode="min"),
             ],
             accelerator="cpu",
+        )
+    elif args.accelerator_type == "tpu":
+        trainer = Trainer(
+            logger=train_loggers,
+            max_epochs=args.epochs,
+            log_every_n_steps=args.logging_interval,
+            val_check_interval=args.evaluate_interval,
+            accumulate_grad_batches=args.accumulate_grad_batches,
+            callbacks=[
+                LearningRateMonitor(logging_interval="step"),
+                EarlyStopping(monitor="val_loss", patience=3, mode="min"),
+            ],
+            devices=8,
+            accelerator="tpu",
         )
     else:
         trainer = Trainer(
