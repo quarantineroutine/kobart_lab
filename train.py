@@ -6,7 +6,7 @@ import torch
 from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
 from pytorch_lightning import Trainer, seed_everything
 
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import LearningRateMonitor, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
@@ -109,15 +109,6 @@ def main(args: argparse.Namespace) -> None:
         )
     ]
 
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=args.output_dir + '/model_ckpts/' + args.log_run_name,
-        monitor='val_loss',
-        filename=args.log_run_name + '{epoch:02d}-{val_loss:.2f}',
-        auto_insert_metric_name=True,
-        save_top_k=5,
-        mode='min',
-    )
-
     if args.gpus == 0:
         trainer = Trainer(
             logger=train_loggers,
@@ -128,7 +119,6 @@ def main(args: argparse.Namespace) -> None:
             callbacks=[
                 LearningRateMonitor(logging_interval="step"),
                 EarlyStopping(monitor="val_loss", patience=3, mode="min"),
-                checkpoint_callback
             ],
             accelerator="cpu",
         )
@@ -142,7 +132,6 @@ def main(args: argparse.Namespace) -> None:
             callbacks=[
                 LearningRateMonitor(logging_interval="step"),
                 EarlyStopping(monitor="val_loss", patience=3, mode="min"),
-                checkpoint_callback
             ],
             gpus=args.gpus,
             strategy='ddp',

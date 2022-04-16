@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pytorch_lightning as pl
 import torch
@@ -147,9 +148,23 @@ class R3FModule(pl.LightningModule):
             val_loss_mean = sum(val_losses) / len(val_losses)
             val_acc_mean = sum(val_accs) / len(val_accs)
 
-            self.model.save_pretrained(
-                os.path.join(
-                    self.model_save_dir,
-                    f"r3fmodel-{self.current_epoch:02d}epoch-{self.global_step}steps-{val_loss_mean:.4f}loss-{val_acc_mean:.4f}acc",
-                ),
-            )
+            model_dirs_list = [(directory, float(directory.split('loss')[1].split('-acc')[0])) for directory in os.listdir(self.model_save_dir) if os.path.isdir(self.model_save_dir + directory)]
+            save_model = True
+
+            if len(model_dirs_list) <= 3:
+                pass
+            else:
+                to_be_deleted = [x for x in model_dirs_list if x[1] > val_loss_mean]
+                if len(to_be_deleted) == 0:
+                    save_model = False
+                else:
+                    to_be_deleted = sorted(to_be_deleted, key= lambda x: x[1])
+                    shutil.rmtree(os.path.join(self.model_save_dir, to_be_deleted[-1][0]))
+
+            if save_model:
+                self.model.save_pretrained(
+                    os.path.join(
+                        self.model_save_dir,
+                        f"r3f-epoch{self.current_epoch:02d}-steps{self.global_step}-loss{val_loss_mean:.4f}-acc{val_acc_mean:.4f}",
+                    ),
+                )
