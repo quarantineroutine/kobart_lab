@@ -10,6 +10,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
 from data import DialogueSummarizationDataset
+from distilkobart import DistilKoBart
 from lightning_modules import DefaultModule, RDropModule, R3FModule
 
 
@@ -41,7 +42,7 @@ def main(args: argparse.Namespace) -> None:
     seed_everything(args.seed)
 
     tokenizer = PreTrainedTokenizerFast.from_pretrained('hyunwoongko/kobart', sep_token='<unused0>', cls_token='<unused1>')
-    model = BartForConditionalGeneration.from_pretrained('hyunwoongko/kobart')
+    model = DistilKoBart(BartForConditionalGeneration.from_pretrained('hyunwoongko/kobart'))
 
     train_dataset = DialogueSummarizationDataset(
         paths=glob(args.train_dataset_pattern),

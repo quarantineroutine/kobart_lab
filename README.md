@@ -1,5 +1,5 @@
 # kobart_lab
-- pre-trained model: `gogamza/kobart-base-v2`(huggingface)
+- pre-trained model: `hyunwoongko/kobart`(huggingface)
 - Nvidia T4 * 2 (GCP VM Instance)
 - dataset: https://aihub.or.kr/aidata/30714
 
@@ -12,7 +12,6 @@ python train.py --output-dir './outputs' \
 ```
 
 ## To-dos
-- [ ] kobart + default, r-drop, r3f train 후 성능 비교
 - [ ] distilkobart 구현
 - [ ] distilkobart + default, r-drop, r3f train 후 성능 비교
 
