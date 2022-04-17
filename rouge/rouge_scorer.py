@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 from tqdm import tqdm
-from rouge_metric import Rouge
+from .rouge_metric import Rouge
 
 class RougeScorer:
     def __init__(self):
@@ -19,8 +19,6 @@ class RougeScorer:
         )
 
     def compute_rouge(self, ref_df, hyp_df):
-        #ref_df = pd.read_csv(ref_path)
-        #hyp_df = pd.read_csv(hyp_path)
         hyp_df.iloc[:,1] = hyp_df.iloc[:,1].fillna(' ')
         ids = ref_df['id']
         hyp_df = hyp_df[hyp_df['id'].isin(ids)]
@@ -48,8 +46,8 @@ class RougeScorer:
 
         scores = self.rouge_evaluator.get_scores(generated_summaries, reference_summaries)
         str_scores = self.format_rouge_scores(scores)
-        #self.save_rouge_scores(str_scores)
-        return str_scores
+
+        return scores
 
     def save_rouge_scores(self, str_scores):
         with open("rouge_scores.txt", "w") as output:

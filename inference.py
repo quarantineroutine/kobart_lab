@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description="Inference Dialogue Summarization w
 parser.add_argument("--pretrained", type=str, choices=["quarantineroutine/distilkobart-r3f-demo", "quarantineroutine/distilkobart-rdrop-demo", "gogamza/kobart-base-v2"], default="gogamza/kobart-base-v2", help="pretrained BART model and tokenizer name")
 parser.add_argument("--dataset-pattern", type=str, required=True, help="glob pattern of inference dataset files")
 parser.add_argument("--output-path", type=str, required=True, help="output tsv file path")
-parser.add_argument("--batch-size", type=int, default=512, help="inference batch size")
+parser.add_argument("--batch-size", type=int, default=32, help="inference batch size")
 parser.add_argument("--dialogue-max-seq-len", type=int, default=256, help="dialogue max sequence length")
 parser.add_argument("--summary-max-seq-len", type=int, default=64, help="summary max sequence length")
 parser.add_argument("--num-beams", type=int, default=3, help="beam size")
@@ -71,7 +71,7 @@ def main(args: argparse.Namespace):
 
     decoded = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in tqdm(total_summary_tokens)]
 
-    with open(f"{args.output_path}/{args.pretrained}.tsv", "w") as fout:
+    with open(args.output_path, "w") as fout:
         writer = csv.writer(fout, delimiter="\t")
         writer.writerow(["id", "dialogue", "target summary", "predict summary"])
 
