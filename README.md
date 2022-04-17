@@ -1,19 +1,27 @@
 # kobart_lab
-- pre-trained model: `hyunwoongko/kobart`(huggingface)
+- pre-trained model: `gogamza/kobart-base-v2`(huggingface)
 - Nvidia T4 * 2 (GCP VM Instance)
 - dataset: https://aihub.or.kr/aidata/30714
 
 ## Train
 ```bash
-python train.py --output-dir './outputs' \
+python train.py --output-dir ./outputs \
     --train-dataset-pattern './data/train/*.json' \
     --val-dataset-pattern './data/valid/*.json' \
     --log-run-name 'default01'
 ```
 
+## Inference
+```bash
+python inference.py --output-dir ./outputs/inferences \
+    --pretrained quarantineroutine/distilkobart-rdrop-demo \
+    --dataset-pattern './data/valid/*.json' \
+    --device cuda
+```
+
 ## To-dos
-- [ ] distilkobart 구현
-- [ ] distilkobart + default, r-drop, r3f train 후 성능 비교
+- [x] distilkobart 구현
+- [ ] distilkobart + r-drop, r3f train 후 성능 비교
 
 ## References
 - Papers

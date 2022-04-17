@@ -71,7 +71,7 @@ def main(args: argparse.Namespace):
 
     decoded = [tokenizer.decode(tokens, skip_special_tokens=True) for tokens in tqdm(total_summary_tokens)]
 
-    with open(args.output_path, "w") as fout:
+    with open(f"{args.output_path}/{args.pretrained}.tsv", "w") as fout:
         writer = csv.writer(fout, delimiter="\t")
         writer.writerow(["id", "dialogue", "target summary", "predict summary"])
 

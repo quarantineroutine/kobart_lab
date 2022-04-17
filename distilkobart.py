@@ -6,7 +6,6 @@ import torch
 from torch import nn
 
 from transformers import BartForConditionalGeneration
-from transformers.modeling_utils import save_pretrained
 
 
 LAYERS_TO_COPY = {
